@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📝 Register - Weather App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .register-container {
+            max-width: 420px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            padding: 45px 35px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: slideUp 0.6s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .register-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+        .register-header .logo { font-size: 3.5rem; margin-bottom: 10px; }
+        .register-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1a1a2e 0%, #4a1942 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+        }
+        .register-header p {
+            color: #718096;
+            font-size: 0.95rem;
+            margin-top: 5px;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+        .form-group .input-wrapper {
+            position: relative;
+        }
+        .form-group .input-wrapper i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            font-size: 1rem;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 14px 16px 14px 44px;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            background: #f7fafc;
+            color: #2d3748;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            background: #ffffff;
+        }
+        .form-group select {
+            padding-right: 16px;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a0aec0' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+        }
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+        }
+        .btn i { margin-right: 8px; }
+        .btn-secondary {
+            background: linear-gradient(135deg, #718096, #4a5568);
+        }
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            font-size: 0.9rem;
+            text-align: center;
+            border: 1px solid #feb2b2;
+        }
+        .success-message {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            font-size: 0.9rem;
+            text-align: center;
+            border: 1px solid #9ae6b4;
+        }
+        .register-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #a0aec0;
+            font-size: 0.85rem;
+        }
+        .register-footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .register-footer a:hover { text-decoration: underline; }
+        .otp-info {
+            background: #ebf8ff;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            color: #2b6cb0;
+            font-size: 0.9rem;
+            text-align: center;
+            border: 1px solid #bee3f8;
+        }
+        body.dark-mode .register-container {
+            background: rgba(20, 20, 40, 0.95);
+            border-color: rgba(255, 255, 255, 0.06);
+        }
+        body.dark-mode .register-header h1 {
+            background: linear-gradient(135deg, #ffffff 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        body.dark-mode .register-header p {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        body.dark-mode .form-group label {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        body.dark-mode .form-group input,
+        body.dark-mode .form-group select {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+        body.dark-mode .form-group input:focus,
+        body.dark-mode .form-group select:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(129, 140, 248, 0.4);
+        }
+        body.dark-mode .form-group select option {
+            background: #1a1a3e;
+            color: #ffffff;
+        }
+        body.dark-mode .register-footer {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        body.dark-mode .register-footer a {
+            color: #a78bfa;
+        }
+        body.dark-mode .error-message {
+            background: rgba(254, 215, 215, 0.1);
+            color: #fca5a5;
+            border-color: rgba(254, 215, 215, 0.1);
+        }
+        body.dark-mode .success-message {
+            background: rgba(198, 246, 213, 0.1);
+            color: #68d391;
+            border-color: rgba(198, 246, 213, 0.1);
+        }
+        body.dark-mode .otp-info {
+            background: rgba(235, 248, 255, 0.05);
+            color: #63b3ed;
+            border-color: rgba(190, 227, 248, 0.1);
+        }
+        @media (max-width: 480px) {
+            .register-container { padding: 30px 20px; }
+            .register-header h1 { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-header">
+            <div class="logo">📝</div>
+            <h1>Create Account</h1>
+            <p>Register with email or phone verification</p>
+        </div>
+
+        {% if error %}
+        <div class="error-message"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+        {% endif %}
+
+        {% if success and step == 'complete' %}
+        <div class="success-message"><i class="fas fa-check-circle"></i> {{ success }}</div>
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="{{ url_for('login') }}" class="btn" style="display: inline-block; text-decoration: none; text-align: center;">
+                <i class="fas fa-sign-in-alt"></i> Go to Login
+            </a>
+        </div>
+        {% else %}
+
+        <form method="POST">
+            {% if step == 'form' %}
+            <div class="form-group">
+                <label for="username"><i class="fas fa-user"></i> Username</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" name="username" placeholder="Choose a username" required autofocus minlength="3">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password"><i class="fas fa-lock"></i> Password</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" name="password" placeholder="Create a password" required minlength="4">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password"><i class="fas fa-check-circle"></i> Confirm Password</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-check-circle"></i>
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm your password" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="contact_method"><i class="fas fa-globe"></i> Contact Method</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-globe"></i>
+                    <select id="contact_method" name="contact_method" required>
+                        <option value="email">📧 Email</option>
+                        <option value="phone">📱 Phone</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" id="emailGroup">
+                <label for="email"><i class="fas fa-envelope"></i> Email Address</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="email" name="email" placeholder="Enter your email" value="{{ temp_email }}">
+                </div>
+            </div>
+
+            <div class="form-group" id="phoneGroup" style="display: none;">
+                <label for="phone"><i class="fas fa-phone"></i> Phone Number</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-phone"></i>
+                    <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" value="{{ temp_phone }}">
+                </div>
+            </div>
+
+            <button type="submit" name="action" value="send_otp" class="btn">
+                <i class="fas fa-paper-plane"></i> Send OTP
+            </button>
+
+            {% elif step == 'verify' %}
+            <div class="otp-info">
+                <i class="fas fa-info-circle"></i> OTP sent to your {{ temp_contact }}
+            </div>
+
+            <div class="form-group">
+                <label for="otp"><i class="fas fa-key"></i> Enter OTP</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-key"></i>
+                    <input type="text" id="otp" name="otp" placeholder="Enter 6-digit OTP" required maxlength="6">
+                </div>
+            </div>
+
+            <button type="submit" name="action" value="verify_otp" class="btn">
+                <i class="fas fa-check-circle"></i> Verify OTP
+            </button>
+
+            <div style="text-align: center; margin-top: 15px;">
+                <button type="submit" name="action" value="resend_otp" class="btn btn-secondary" style="width: auto; padding: 10px 20px;">
+                    <i class="fas fa-redo"></i> Resend OTP
+                </button>
+            </div>
+            {% endif %}
+
+            <div class="register-footer">
+                Already have an account? <a href="{{ url_for('login') }}">Login here</a>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+
+    <script>
+        // Toggle email/phone fields
+        const contactMethod = document.getElementById('contact_method');
+        const emailGroup = document.getElementById('emailGroup');
+        const phoneGroup = document.getElementById('phoneGroup');
+
+        if (contactMethod) {
+            contactMethod.addEventListener('change', function() {
+                if (this.value === 'email') {
+                    emailGroup.style.display = 'block';
+                    phoneGroup.style.display = 'none';
+                    document.getElementById('email').required = true;
+                    document.getElementById('phone').required = false;
+                } else {
+                    emailGroup.style.display = 'none';
+                    phoneGroup.style.display = 'block';
+                    document.getElementById('email').required = false;
+                    document.getElementById('phone').required = true;
+                }
+            });
+        }
+
+        // Dark mode
+        const isDarkMode = localStorage.getItem('darkMode') === 'true';
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+</body>
+</html>

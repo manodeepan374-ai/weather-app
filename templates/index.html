@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌤️ Weather App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- ===== PWA META TAGS ===== -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/192/weather.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#818cf8">
+</head>
+<body class="{{ themes[theme]['class'] if theme else 'theme-default' }}">
+    
+    <!-- ===== SIDEBAR ===== -->
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <span class="sidebar-emoji">🌤️</span>
+                <span class="sidebar-title">Weather</span>
+            </div>
+            <button class="sidebar-close" onclick="closeSidebar()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="sidebar-user">
+            <div class="sidebar-avatar">
+                <span>{{ username[0].upper() if username else 'U' }}</span>
+            </div>
+            <div class="sidebar-username">{{ username if username else 'Guest' }}</div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="/" class="sidebar-link active">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="/profile" class="sidebar-link">
+                <i class="fas fa-user"></i>
+                <span>{{ texts.profile if texts.profile else 'My Profile' }}</span>
+            </a>
+            <a href="/compare" class="sidebar-link">
+                <i class="fas fa-arrows-left-right"></i>
+                <span>{{ texts.compare if texts.compare else 'Compare Cities' }}</span>
+            </a>
+            <a href="/chatbot" class="sidebar-link">
+                <i class="fas fa-robot"></i>
+                <span>{{ texts.chatbot if texts.chatbot else 'Weather Chatbot' }}</span>
+            </a>
+            <a href="/widget" class="sidebar-link">
+                <i class="fas fa-code"></i>
+                <span>{{ texts.widget if texts.widget else 'Weather Widget' }}</span>
+            </a>
+            <a href="/admin" class="sidebar-link">
+                <i class="fas fa-chart-pie"></i>
+                <span>{{ texts.admin if texts.admin else 'Admin Dashboard' }}</span>
+            </a>
+            
+            <div class="sidebar-divider"></div>
+            
+            <a href="#" class="sidebar-link" onclick="document.getElementById('cityInput').focus(); closeSidebar();">
+                <i class="fas fa-search"></i>
+                <span>{{ texts.search if texts.search else 'Search Weather' }}</span>
+            </a>
+            <a href="#" class="sidebar-link" onclick="document.querySelector('.favorites-section')?.scrollIntoView({behavior:'smooth'}); closeSidebar();">
+                <i class="fas fa-star"></i>
+                <span>{{ texts.favorites if texts.favorites else 'Favorites' }}</span>
+                {% if favorites %}
+                <span class="sidebar-badge">{{ favorites|length }}</span>
+                {% endif %}
+            </a>
+            <a href="#" class="sidebar-link" onclick="document.querySelector('.recent-section')?.scrollIntoView({behavior:'smooth'}); closeSidebar();">
+                <i class="fas fa-history"></i>
+                <span>{{ texts.recent if texts.recent else 'Recent Searches' }}</span>
+            </a>
+            <a href="#" class="sidebar-link" onclick="document.querySelector('.radar-section')?.scrollIntoView({behavior:'smooth'}); closeSidebar();">
+                <i class="fas fa-satellite"></i>
+                <span>{{ texts.radar if texts.radar else 'Weather Radar' }}</span>
+            </a>
+            <a href="#" class="sidebar-link" onclick="document.querySelector('.map-section')?.scrollIntoView({behavior:'smooth'}); closeSidebar();">
+                <i class="fas fa-map"></i>
+                <span>Satellite View</span>
+            </a>
+            <a href="#" class="sidebar-link" onclick="document.querySelector('.forecast-section')?.scrollIntoView({behavior:'smooth'}); closeSidebar();">
+                <i class="fas fa-calendar-week"></i>
+                <span>{{ texts.forecast if texts.forecast else '5-Day Forecast' }}</span>
+            </a>
+            
+            <div class="sidebar-divider"></div>
+            
+            <!-- Settings Section -->
+            <span class="sidebar-label">Settings</span>
+            
+            <div class="sidebar-settings">
+                <div class="sidebar-setting-item">
+                    <i class="fas fa-palette"></i>
+                    <span>Theme</span>
+                    <form method="POST" action="/set_theme" style="display: inline;" onchange="this.submit()">
+                        <select name="theme" class="sidebar-select">
+                            <option value="default" {% if theme == 'default' %}selected{% endif %}>Default</option>
+                            <option value="ocean" {% if theme == 'ocean' %}selected{% endif %}>🌊 Ocean</option>
+                            <option value="sunset" {% if theme == 'sunset' %}selected{% endif %}>🌅 Sunset</option>
+                            <option value="forest" {% if theme == 'forest' %}selected{% endif %}>🌲 Forest</option>
+                            <option value="night" {% if theme == 'night' %}selected{% endif %}>🌙 Night</option>
+                        </select>
+                    </form>
+                </div>
+                
+                <div class="sidebar-setting-item">
+                    <i class="fas fa-language"></i>
+                    <span>Language</span>
+                    <form method="POST" style="display: inline;" onchange="this.submit()">
+                        <input type="hidden" name="action" value="change_lang">
+                        <select name="lang" class="sidebar-select">
+                            {% for code, lang_data in languages.items() %}
+                            <option value="{{ code }}" {% if lang == code %}selected{% endif %}>
+                                {{ lang_data.flag }} {{ lang_data.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+                
+                <div class="sidebar-setting-item">
+                    <i class="fas fa-temperature-high"></i>
+                    <span>Unit</span>
+                    <form method="POST" style="display: inline;" onchange="this.submit()">
+                        <input type="hidden" name="action" value="toggle_unit">
+                        <button type="submit" class="sidebar-unit-btn">
+                            {{ '°F' if unit == 'f' else '°C' }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="sidebar-divider"></div>
+            
+            <!-- Voice Assistant -->
+            <a href="#" class="sidebar-link" onclick="startVoiceAssistant(); closeSidebar();">
+                <i class="fas fa-microphone"></i>
+                <span>{{ texts.voice_assistant if texts.voice_assistant else 'Voice Assistant' }}</span>
+            </a>
+            
+            <!-- Contact -->
+            <a href="/contact" class="sidebar-link">
+                <i class="fas fa-envelope"></i>
+                <span>{{ texts.contact_us if texts.contact_us else 'Contact Us' }}</span>
+            </a>
+            
+            <!-- Logout -->
+            <a href="/logout" class="sidebar-link sidebar-logout">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>{{ texts.logout if texts.logout else 'Logout' }}</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- ===== SIDEBAR OVERLAY ===== -->
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="container" id="mainContent">
+        <!-- HEADER -->
+        <header>
+            <div class="header-top">
+                <div class="header-left">
+                    <button class="menu-btn" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="logo-section">
+                        <h1>{{ texts.title if texts.title else '🌤️ Weather' }}</h1>
+                        <span class="greeting">{{ greeting }}</span>
+                        {% if username %}
+                        <span class="user-badge">👋 {{ username }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <!-- Language Selector in Header -->
+                    <form method="POST" style="display: inline;">
+                        <input type="hidden" name="action" value="change_lang">
+                        <select name="lang" onchange="this.form.submit()" class="lang-select">
+                            {% for code, lang_data in languages.items() %}
+                            <option value="{{ code }}" {% if lang == code %}selected{% endif %}>
+                                {{ lang_data.flag }} {{ lang_data.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                    
+                    <button id="locationBtn" class="icon-btn" title="Get my location" onclick="detectLocation()">
+                        <i class="fas fa-location-dot"></i>
+                    </button>
+                    <a href="/compare" class="icon-btn" title="Compare Cities">
+                        <i class="fas fa-arrows-left-right"></i>
+                    </a>
+                    <a href="/chatbot" class="icon-btn" title="Weather Chatbot">
+                        <i class="fas fa-robot"></i>
+                    </a>
+                    <a href="/profile" class="icon-btn" title="My Profile">
+                        <i class="fas fa-user"></i>
+                    </a>
+                    <a href="/logout" class="icon-btn" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                    <button id="darkModeToggle" class="icon-btn"><i class="fas fa-moon"></i></button>
+                </div>
+            </div>
+            <p class="subtitle">{{ greeting_message }}</p>
+            <div class="time-display"><span class="current-time">{{ current_time }}</span></div>
+        </header>
+
+        <!-- SEARCH -->
+        <form method="POST" class="search-box" id="searchForm">
+            <div class="search-input-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" name="city" id="cityInput" placeholder="{{ texts.placeholder }}" required>
+                <button type="button" class="voice-btn"><i class="fas fa-microphone" x-webkit-speech></i></button>
+            </div>
+            <button type="submit" name="action" value="search" class="search-btn"><i class="fas fa-arrow-right"></i></button>
+        </form>
+
+        <!-- RECENT & FAVORITES -->
+        {% if recent_searches %}
+        <div class="recent-section">
+            <h3><i class="fas fa-history"></i> {{ texts.recent if texts.recent else 'Recent' }}</h3>
+            <div class="recent-list">
+                {% for city in recent_searches[:5] %}
+                <span class="recent-tag">
+                    <a href="#" onclick="document.getElementById('cityInput').value='{{ city }}'; document.getElementById('searchForm').submit(); return false;">{{ city }}</a>
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if favorites %}
+        <div class="favorites-section">
+            <h3><i class="fas fa-star"></i> {{ texts.favorites if texts.favorites else 'Favorites' }}</h3>
+            <div class="favorites-list">
+                {% for city in favorites %}
+                <span class="favorite-tag">
+                    <i class="fas fa-star"></i>
+                    <a href="#" onclick="document.getElementById('cityInput').value='{{ city }}'; document.getElementById('searchForm').submit(); return false;">{{ city }}</a>
+                    <form method="POST" style="display: inline;">
+                        <input type="hidden" name="city" value="{{ city }}">
+                        <button type="submit" name="action" value="remove_favorite" class="remove-fav"><i class="fas fa-times"></i></button>
+                    </form>
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ERROR -->
+        {% if error %}
+        <div class="error-message"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+        {% endif %}
+
+        <!-- ALERTS -->
+        {% if alerts %}
+        <div class="alerts-section">
+            {% for alert in alerts %}
+            <div class="alert alert-{{ alert.type }}">
+                <span class="alert-icon">{{ alert.icon }}</span>
+                <span class="alert-message">{{ alert.message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- TEMPERATURE ALERTS -->
+        {% if temp_alerts %}
+        <div class="temp-alerts-section">
+            {% for alert in temp_alerts %}
+            <div class="temp-alert temp-alert-{{ alert.type }}" style="border-left-color: {{ alert.color }};">
+                <span class="temp-alert-icon">{{ alert.icon }}</span>
+                <div class="temp-alert-content">
+                    <span class="temp-alert-title">{{ alert.title }}</span>
+                    <span class="temp-alert-message">{{ alert.message }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- WEATHER CARD -->
+        {% if weather %}
+        <div class="weather-card">
+            <div class="weather-main">
+                <div class="weather-left">
+                    <div class="city-name"><i class="fas fa-map-pin"></i><h2>{{ weather.city }}, {{ weather.country }}</h2></div>
+                    <div class="weather-temp-display">
+                        <span class="big-temp">{{ weather.temperature }}<span class="temp-unit">°{{ 'F' if unit == 'f' else 'C' }}</span></span>
+                        <span class="weather-emoji-big">{{ get_emoji(weather.description) }}</span>
+                    </div>
+                    <div class="weather-desc">{{ weather.description }}</div>
+                    <div class="feels-like-text">{{ texts.feels_like if texts.feels_like else 'Feels like' }} {{ weather.feels_like }}°{{ 'F' if unit == 'f' else 'C' }}</div>
+                    <form method="POST" style="display: inline;">
+                        <input type="hidden" name="city" value="{{ weather.city }}">
+                        <button type="submit" name="action" value="add_favorite" class="fav-btn"><i class="fas fa-star"></i> {{ texts.add_favorite if texts.add_favorite else 'Add to Favorites' }}</button>
+                    </form>
+                </div>
+                <div class="weather-right">
+                    <img src="https://openweathermap.org/img/wn/{{ weather.icon }}@4x.png" alt="{{ weather.description }}" class="weather-icon-big">
+                </div>
+            </div>
+
+            <!-- DETAILS GRID -->
+            <div class="details-grid">
+                <div class="detail-card"><div class="detail-icon">💧</div><div class="detail-info"><span class="detail-label">{{ texts.humidity if texts.humidity else 'Humidity' }}</span><span class="detail-value">{{ weather.humidity }}%</span></div></div>
+                <div class="detail-card"><div class="detail-icon">🌬️</div><div class="detail-info"><span class="detail-label">{{ texts.wind_speed if texts.wind_speed else 'Wind' }}</span><span class="detail-value">{{ weather.wind_speed }} km/h</span></div></div>
+                <div class="detail-card"><div class="detail-icon">🌡️</div><div class="detail-info"><span class="detail-label">{{ texts.feels_like if texts.feels_like else 'Feels Like' }}</span><span class="detail-value">{{ weather.feels_like }}°{{ 'F' if unit == 'f' else 'C' }}</span></div></div>
+                <div class="detail-card"><div class="detail-icon">📊</div><div class="detail-info"><span class="detail-label">{{ texts.pressure if texts.pressure else 'Pressure' }}</span><span class="detail-value">{{ weather.pressure }} hPa</span></div></div>
+                <div class="detail-card"><div class="detail-icon">👁️</div><div class="detail-info"><span class="detail-label">{{ texts.visibility if texts.visibility else 'Visibility' }}</span><span class="detail-value">{{ weather.visibility }} km</span></div></div>
+                <div class="detail-card"><div class="detail-icon">🌅</div><div class="detail-info"><span class="detail-label">{{ texts.sunrise if texts.sunrise else 'Sunrise/Sunset' }}</span><span class="detail-value">{{ weather.sunrise }} / {{ weather.sunset }}</span></div></div>
+            </div>
+
+            <!-- AIR QUALITY -->
+            {% if air_quality %}
+            <div class="air-quality-card">
+                <h4><i class="fas fa-wind"></i> {{ texts.air_quality if texts.air_quality else 'Air Quality' }}</h4>
+                <div class="aqi-row">
+                    <span class="aqi-badge" style="background: {{ air_quality.color }}20; color: {{ air_quality.color }};">{{ air_quality.emoji }} {{ air_quality.label }}</span>
+                    <span class="aqi-number">AQI: {{ air_quality.aqi }}</span>
+                </div>
+                <div class="aqi-details-row">
+                    <span>PM2.5: {{ air_quality.pm25 }} µg/m³</span>
+                    <span>PM10: {{ air_quality.pm10 }} µg/m³</span>
+                    <span>NO₂: {{ air_quality.no2 }} µg/m³</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- UV INDEX -->
+            {% if uv_index %}
+            <div class="uv-section">
+                <h4><i class="fas fa-sun"></i> {{ texts.uv_index if texts.uv_index else 'UV Index' }}</h4>
+                <div class="uv-display">
+                    <span class="uv-value" style="color: {{ uv_index.color }};">
+                        {{ uv_index.value }}
+                    </span>
+                    <span class="uv-level" style="color: {{ uv_index.color }};">
+                        {{ uv_index.level }}
+                    </span>
+                    <span class="uv-advice">{{ uv_index.advice }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- WORLD CLOCK -->
+            {% if world_time %}
+            <div class="world-clock-section">
+                <h4><i class="fas fa-globe"></i> {{ texts.world_clock if texts.world_clock else 'World Clock' }}</h4>
+                <div class="world-clock-display">
+                    <span class="clock-icon">🕐</span>
+                    <span class="clock-time">{{ world_time }}</span>
+                    <span class="clock-city">{{ weather.city if weather else '' }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- WEATHER STATS -->
+            {% if stats %}
+            <div class="stats-section">
+                <h4><i class="fas fa-chart-bar"></i> {{ texts.stats if texts.stats else 'Weather Statistics' }}</h4>
+                <div class="stats-grid">
+                    <div class="stat-card"><span class="stat-label">{{ texts.high if texts.high else 'High' }}</span><span class="stat-value">{{ stats.high }}°{{ 'F' if unit == 'f' else 'C' }}</span></div>
+                    <div class="stat-card"><span class="stat-label">{{ texts.low if texts.low else 'Low' }}</span><span class="stat-value">{{ stats.low }}°{{ 'F' if unit == 'f' else 'C' }}</span></div>
+                    <div class="stat-card"><span class="stat-label">{{ texts.average if texts.average else 'Average' }}</span><span class="stat-value">{{ stats.average }}°{{ 'F' if unit == 'f' else 'C' }}</span></div>
+                    <div class="stat-card"><span class="stat-label">{{ texts.rainy_days if texts.rainy_days else 'Rainy Days' }}</span><span class="stat-value">{{ stats.rainy_days }} days</span></div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- NEARBY CITIES -->
+            {% if nearby_cities %}
+            <div class="nearby-section">
+                <h3><i class="fas fa-map-marked-alt"></i> {{ texts.nearby if texts.nearby else 'Nearby Cities' }}</h3>
+                <div class="nearby-grid">
+                    {% for city in nearby_cities %}
+                    <div class="nearby-card" onclick="document.getElementById('cityInput').value='{{ city.name }}'; document.getElementById('searchForm').submit();">
+                        <div class="nearby-name">{{ city.name }}</div>
+                        <div class="nearby-icon">
+                            <img src="https://openweathermap.org/img/wn/{{ city.icon }}.png" alt="{{ city.description }}">
+                        </div>
+                        <div class="nearby-temp">{{ city.temperature }}°{{ 'F' if unit == 'f' else 'C' }}</div>
+                        <div class="nearby-desc">{{ city.description }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- WEATHER RADAR -->
+            {% if radar %}
+            <div class="radar-section">
+                <h3><i class="fas fa-satellite"></i> {{ texts.radar if texts.radar else 'Weather Radar' }}</h3>
+                <div class="radar-container">
+                    <iframe 
+                        src="{{ radar.windy_url }}"
+                        width="100%" 
+                        height="400" 
+                        frameborder="0" 
+                        style="border-radius:16px;"
+                        loading="lazy">
+                    </iframe>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- SATELLITE MAP -->
+            <div class="map-section">
+                <h3><i class="fas fa-satellite"></i> Satellite View</h3>
+                <div class="map-container" id="satelliteMap" style="height:350px; border-radius:16px; overflow:hidden;"></div>
+            </div>
+
+            <!-- SHARE & EXPORT -->
+            <div class="share-section">
+                <button onclick="shareWeather()" class="share-btn">
+                    <i class="fas fa-share-alt"></i> {{ texts.share if texts.share else 'Share' }}
+                </button>
+                <button onclick="copyWeather()" class="share-btn">
+                    <i class="fas fa-copy"></i> {{ texts.copy if texts.copy else 'Copy' }}
+                </button>
+                <a href="/export_pdf/{{ weather.city }}" class="share-btn" target="_blank">
+                    <i class="fas fa-file-pdf"></i> {{ texts.export_pdf if texts.export_pdf else 'Export PDF' }}
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- HOURLY FORECAST -->
+        {% if hourly_forecast %}
+        <div class="hourly-section">
+            <h3><i class="fas fa-clock"></i> {{ texts.hourly if texts.hourly else 'Hourly Forecast' }}</h3>
+            <div class="hourly-grid">
+                {% for hour in hourly_forecast %}
+                <div class="hourly-card">
+                    <div class="hourly-time">{{ hour.time }}</div>
+                    <div class="hourly-icon"><img src="https://openweathermap.org/img/wn/{{ hour.icon }}.png" alt="{{ hour.description }}"></div>
+                    <div class="hourly-temp">{{ hour.temp }}°{{ 'F' if unit == 'f' else 'C' }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- TEMPERATURE TREND -->
+        {% if forecast and trend_labels and trend_temps %}
+        <div class="chart-section">
+            <h3><i class="fas fa-chart-line"></i> Temperature Trend</h3>
+            <div class="chart-container">
+                <div class="trend-chart">
+                    <div class="chart-bars">
+                        {% for i in range(trend_labels|length) %}
+                        <div class="bar-wrapper">
+                            <div class="bar-label">{{ trend_labels[i] }}</div>
+                            <div class="bar-track">
+                                <div class="bar-fill" style="height: {{ (trend_temps[i] / 45 * 100) if trend_temps[i] > 0 else 10 }}%;">
+                                    <span class="bar-value">{{ trend_temps[i] }}°{{ 'F' if unit == 'f' else 'C' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 5-DAY FORECAST -->
+        {% if forecast %}
+        <div class="forecast-section">
+            <h3>{{ texts.forecast if texts.forecast else '5-Day Forecast' }}</h3>
+            <div class="forecast-grid">
+                {% for day in forecast %}
+                <div class="forecast-card">
+                    <div class="forecast-date">{{ day.day }}<br><small>{{ day.date }}</small></div>
+                    <div class="forecast-icon"><img src="https://openweathermap.org/img/wn/{{ day.icon }}.png" alt="{{ day.description }}"></div>
+                    <div class="forecast-temp">{{ day.temperature }}°{{ 'F' if unit == 'f' else 'C' }}</div>
+                    <div class="forecast-desc">{{ day.description }}</div>
+                    <div class="forecast-humidity">💧 {{ day.humidity }}%</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- FOOTER -->
+        <footer>
+            <i class="fas fa-cloud-sun"></i> Weather data from <a href="https://openweathermap.org" target="_blank">OpenWeatherMap</a>
+            {% if weather %}<br><span style="font-size: 0.8rem; opacity: 0.3;">{{ texts.updated if texts.updated else 'Updated' }}: {{ weather.city }}, {{ weather.country }}</span>{% endif %}
+        </footer>
+    </div>
+
+    <!-- VOICE ASSISTANT BUTTON -->
+    <button id="voiceAssistantBtn" class="voice-assistant-btn" onclick="startVoiceAssistant()">
+        <i class="fas fa-microphone"></i> <span>{{ texts.voice_assistant if texts.voice_assistant else 'Voice Assistant' }}</span>
+    </button>
+
+    <!-- ===================================================== -->
+    <!-- JAVASCRIPT SECTION                                     -->
+    <!-- ===================================================== -->
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // ===== SIDEBAR FUNCTIONS =====
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+            document.body.classList.toggle('sidebar-open');
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.querySelector('.sidebar-overlay').classList.remove('active');
+            document.body.classList.remove('sidebar-open');
+        }
+
+        // Close sidebar on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeSidebar();
+        });
+
+        // Weather data from Flask
+        const weatherData = {
+            lat: {{ weather.lat if weather else 'null' }},
+            lon: {{ weather.lon if weather else 'null' }},
+            city: '{{ weather.city if weather else "" }}',
+            country: '{{ weather.country if weather else "" }}',
+            description: '{{ weather.description if weather else "" }}',
+            temperature: '{{ weather.temperature if weather else "" }}',
+            unit: '{{ unit }}'
+        };
+        
+        // ===== DARK MODE =====
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+        
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            localStorage.setItem('darkMode', isDarkMode);
+            darkModeToggle.innerHTML = isDarkMode ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+        
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+            darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+        
+        // ===== TIME BACKGROUND =====
+        function setTimeBackground() {
+            const hour = new Date().getHours();
+            const body = document.body;
+            body.classList.remove('morning', 'afternoon', 'evening', 'night');
+            if (hour >= 5 && hour < 12) body.classList.add('morning');
+            else if (hour >= 12 && hour < 17) body.classList.add('afternoon');
+            else if (hour >= 17 && hour < 21) body.classList.add('evening');
+            else body.classList.add('night');
+        }
+        setTimeBackground();
+        
+        // ===== SATELLITE MAP =====
+        function initSatelliteMap(lat, lon, city, country, description, temperature, unit) {
+            var map = L.map('satelliteMap', {
+                zoomControl: true,
+                attributionControl: true
+            }).setView([lat, lon], 14);
+            
+            // Using Esri Satellite - NO TOKEN NEEDED!
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '&copy; <a href="https://www.esri.com/en-us/home">Esri</a>',
+                maxZoom: 19,
+                minZoom: 1
+            }).addTo(map);
+            
+            var customIcon = L.divIcon({
+                className: 'custom-marker',
+                html: '<div style="background: #667eea; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.4);"><span style="color: white; font-size: 18px;">📍</span></div>',
+                iconSize: [40, 40],
+                iconAnchor: [20, 40]
+            });
+            
+            L.marker([lat, lon], { icon: customIcon })
+                .addTo(map)
+                .bindPopup(`
+                    <div style="text-align: center; padding: 5px;">
+                        <b style="font-size: 16px;">${city}, ${country}</b><br>
+                        <span style="font-size: 14px;">${description}</span><br>
+                        <span style="font-size: 18px; font-weight: bold;">${temperature}°${unit == 'f' ? 'F' : 'C'}</span>
+                    </div>
+                `);
+            
+            setTimeout(function() {
+                map.invalidateSize();
+            }, 500);
+            
+            window.addEventListener('resize', function() {
+                map.invalidateSize();
+            });
+        }
+        
+        // ===== SHARE & COPY =====
+        function shareWeather() {
+            if (weatherData.city) {
+                const text = '🌤️ Weather in ' + weatherData.city + ': ' + weatherData.temperature + '°' + (weatherData.unit == 'f' ? 'F' : 'C') + ', ' + weatherData.description;
+                if (navigator.share) {
+                    navigator.share({ title: 'Weather Update', text: text });
+                } else {
+                    navigator.clipboard.writeText(text);
+                    alert('📋 Weather copied!');
+                }
+            }
+        }
+        
+        function copyWeather() {
+            if (weatherData.city) {
+                const text = '🌤️ Weather in ' + weatherData.city + ': ' + weatherData.temperature + '°' + (weatherData.unit == 'f' ? 'F' : 'C') + ', ' + weatherData.description;
+                navigator.clipboard.writeText(text);
+                alert('📋 Weather copied!');
+            }
+        }
+        
+        // ===== LOCATION DETECTION =====
+        function detectLocation() {
+            const btn = document.getElementById('locationBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        
+                        fetch('/detect_location', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ lat: lat, lon: lon })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                document.getElementById('cityInput').value = data.city;
+                                document.getElementById('searchForm').submit();
+                            } else {
+                                document.getElementById('cityInput').placeholder = 'Enter city manually...';
+                                document.getElementById('cityInput').focus();
+                            }
+                            btn.innerHTML = '<i class="fas fa-location-dot"></i>';
+                        });
+                    },
+                    function(error) {
+                        document.getElementById('cityInput').placeholder = 'Enter city manually...';
+                        document.getElementById('cityInput').focus();
+                        btn.innerHTML = '<i class="fas fa-location-dot"></i>';
+                    }
+                );
+            } else {
+                document.getElementById('cityInput').placeholder = 'Enter city manually...';
+                btn.innerHTML = '<i class="fas fa-location-dot"></i>';
+            }
+        }
+        
+        // ===== CARTOON POPUP ANIMATION =====
+        function showCartoonPopup(weatherDescription) {
+            const desc = weatherDescription.toLowerCase();
+            
+            let emoji = '🌤️';
+            let popupClass = 'sunny';
+            
+            if (desc.includes('clear') || desc.includes('sunny')) {
+                emoji = '☀️';
+                popupClass = 'sunny';
+            } else if (desc.includes('rain') || desc.includes('shower') || desc.includes('drizzle')) {
+                emoji = '🌧️';
+                popupClass = 'rainy';
+            } else if (desc.includes('cloud') || desc.includes('overcast')) {
+                emoji = '☁️';
+                popupClass = 'cloudy';
+            } else if (desc.includes('snow')) {
+                emoji = '❄️';
+                popupClass = 'snowy';
+            } else if (desc.includes('storm') || desc.includes('thunder') || desc.includes('lightning')) {
+                emoji = '⛈️';
+                popupClass = 'stormy';
+            } else if (desc.includes('fog') || desc.includes('mist') || desc.includes('haze')) {
+                emoji = '🌫️';
+                popupClass = 'foggy';
+            }
+            
+            const existing = document.querySelector('.weather-popup');
+            if (existing) existing.remove();
+            
+            const popup = document.createElement('div');
+            popup.className = `weather-popup ${popupClass}`;
+            popup.innerHTML = `
+                <span class="popup-emoji">${emoji}</span>
+                <span class="popup-text">${weatherDescription}</span>
+            `;
+            document.body.appendChild(popup);
+            
+            setTimeout(() => {
+                if (popup) popup.remove();
+            }, 2000);
+        }
+        
+        // ===== PUSH NOTIFICATIONS =====
+        function requestNotificationPermission() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(function(permission) {
+                    if (permission === 'granted') {
+                        console.log('Notification permission granted!');
+                    }
+                });
+            }
+        }
+
+        function sendPushNotification(title, message) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: message,
+                    icon: 'https://img.icons8.com/fluency/96/weather.png',
+                    vibrate: [200, 100, 200],
+                    tag: 'weather-alert'
+                });
+            }
+        }
+
+        // Request notification permission on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            requestNotificationPermission();
+        });
+
+        // Send notification when weather loads
+        {% if weather %}
+            {% if temp_alerts %}
+                setTimeout(function() {
+                    sendPushNotification('🌤️ Weather Alert', '{{ temp_alerts[0].title }} - {{ temp_alerts[0].message }}');
+                }, 2000);
+            {% endif %}
+        {% endif %}
+        
+        // ===== VOICE ASSISTANT =====
+        let isListening = false;
+
+        function startVoiceAssistant() {
+            const btn = document.getElementById('voiceAssistantBtn');
+            
+            if (isListening) {
+                isListening = false;
+                btn.innerHTML = '<i class="fas fa-microphone"></i> <span>Voice Assistant</span>';
+                btn.style.background = 'linear-gradient(135deg, #818cf8, #6366f1)';
+                return;
+            }
+            
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                speakText('Voice Assistant is not supported in your browser. Please use Chrome, Edge, or Safari.');
+                return;
+            }
+            
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            
+            recognition.lang = 'en-US';
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 3;
+            
+            isListening = true;
+            btn.innerHTML = '<i class="fas fa-circle"></i> <span>Listening...</span>';
+            btn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+            
+            recognition.onresult = function(event) {
+                let finalTranscript = '';
+                let interimTranscript = '';
+                
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                
+                if (interimTranscript) {
+                    btn.innerHTML = `<i class="fas fa-circle"></i> <span>${interimTranscript}</span>`;
+                }
+                
+                if (finalTranscript) {
+                    processVoiceCommand(finalTranscript);
+                    recognition.stop();
+                }
+            };
+            
+            recognition.onerror = function(event) {
+                isListening = false;
+                btn.innerHTML = '<i class="fas fa-microphone"></i> <span>Voice Assistant</span>';
+                btn.style.background = 'linear-gradient(135deg, #818cf8, #6366f1)';
+                
+                if (event.error === 'not-allowed') {
+                    speakText('Please allow microphone access and try again.');
+                } else if (event.error === 'no-speech') {
+                    speakText('I did not hear anything. Please try again.');
+                } else {
+                    speakText('Sorry, I had trouble hearing you. Please try again.');
+                }
+            };
+            
+            recognition.onend = function() {
+                isListening = false;
+                btn.innerHTML = '<i class="fas fa-microphone"></i> <span>Voice Assistant</span>';
+                btn.style.background = 'linear-gradient(135deg, #818cf8, #6366f1)';
+            };
+            
+            recognition.start();
+        }
+
+        function processVoiceCommand(transcript) {
+            const text = transcript.toLowerCase().trim();
+            const btn = document.getElementById('voiceAssistantBtn');
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Processing...</span>';
+            
+            setTimeout(() => {
+                if (text.includes('weather in') || text.includes('weather for') || text.includes('what is weather in')) {
+                    let city = text.replace(/weather in|weather for|what is weather in/g, '').trim();
+                    if (city) {
+                        document.getElementById('cityInput').value = city;
+                        speakText(`Searching weather for ${city}`);
+                        setTimeout(() => { document.getElementById('searchForm').submit(); }, 800);
+                    } else {
+                        speakText('Please say a city name.');
+                    }
+                } else if (text.includes('current weather') || text.includes('my weather') || text.includes('weather now')) {
+                    if (weatherData.city) {
+                        speakText(`Current weather in ${weatherData.city} is ${weatherData.temperature} degrees with ${weatherData.description}`);
+                    } else {
+                        speakText('Please search for a city first.');
+                    }
+                } else if (text.includes('dark mode') || text.includes('dark')) {
+                    document.getElementById('darkModeToggle').click();
+                    speakText('Dark mode toggled');
+                } else if (text.includes('favorites') || text.includes('favorite')) {
+                    speakText('Showing your favorites');
+                    const section = document.querySelector('.favorites-section');
+                    if (section) section.scrollIntoView({ behavior: 'smooth' });
+                } else if (text.includes('forecast')) {
+                    speakText('Showing 5 day forecast');
+                    const section = document.querySelector('.forecast-section');
+                    if (section) section.scrollIntoView({ behavior: 'smooth' });
+                } else if (text.includes('radar') || text.includes('map')) {
+                    speakText('Showing weather radar');
+                    const section = document.querySelector('.radar-section');
+                    if (section) section.scrollIntoView({ behavior: 'smooth' });
+                } else if (text.includes('share') || text.includes('share weather')) {
+                    if (weatherData.city) {
+                        shareWeather();
+                        speakText('Weather shared successfully');
+                    } else {
+                        speakText('Please search for a city first.');
+                    }
+                } else if (text.includes('help') || text.includes('what can you do') || text.includes('commands')) {
+                    speakText('You can say weather in any city, dark mode, favorites, forecast, radar, share, or help');
+                } else if (text.includes('hello') || text.includes('hi') || text.includes('hey')) {
+                    const greetings = ['Hello! How can I help you today?', 'Hi there! What can I do for you?', 'Hey! Ready to check the weather?'];
+                    speakText(greetings[Math.floor(Math.random() * greetings.length)]);
+                } else if (text.includes('temperature') || text.includes('temp')) {
+                    if (weatherData.city) {
+                        speakText(`The temperature in ${weatherData.city} is ${weatherData.temperature} degrees`);
+                    } else {
+                        speakText('Please search for a city first.');
+                    }
+                } else if (text.includes('city') || text.includes('location')) {
+                    if (weatherData.city) {
+                        speakText(`You are viewing weather for ${weatherData.city}, ${weatherData.country}`);
+                    } else {
+                        speakText('Please search for a city first.');
+                    }
+                } else if (text.includes('profile') || text.includes('my profile')) {
+                    speakText('Opening your profile');
+                    setTimeout(() => { window.location.href = '/profile'; }, 800);
+                } else if (text.includes('compare') || text.includes('comparison')) {
+                    speakText('Opening weather comparison');
+                    setTimeout(() => { window.location.href = '/compare'; }, 800);
+                } else if (text.includes('chatbot') || text.includes('chat')) {
+                    speakText('Opening weather chatbot');
+                    setTimeout(() => { window.location.href = '/chatbot'; }, 800);
+                } else if (text.includes('widget') || text.includes('embed')) {
+                    speakText('Opening weather widget');
+                    setTimeout(() => { window.location.href = '/widget'; }, 800);
+                } else if (text.includes('logout') || text.includes('sign out')) {
+                    speakText('Logging out');
+                    setTimeout(() => { window.location.href = '/logout'; }, 800);
+                } else {
+                    const words = text.split(' ');
+                    if (words.length <= 3 && words.length >= 1) {
+                        const possibleCity = words.join(' ').trim();
+                        if (possibleCity.length > 2) {
+                            document.getElementById('cityInput').value = possibleCity;
+                            speakText(`Searching weather for ${possibleCity}`);
+                            setTimeout(() => { document.getElementById('searchForm').submit(); }, 800);
+                        } else {
+                            speakText('I heard you say something. Please try saying "weather in Chennai" or check the help command.');
+                        }
+                    } else {
+                        speakText(`I heard "${text}". Try saying "weather in Delhi" or "help" for available commands.`);
+                    }
+                }
+                
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-microphone"></i> <span>Voice Assistant</span>';
+                    btn.style.background = 'linear-gradient(135deg, #818cf8, #6366f1)';
+                }, 1500);
+                
+            }, 500);
+        }
+
+        function speakText(text) {
+            if (!('speechSynthesis' in window)) return;
+            
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            const voices = window.speechSynthesis.getVoices();
+            let femaleVoice = null;
+            
+            const femaleVoiceNames = [
+                'Google UK English Female',
+                'Google US English Female',
+                'Samantha',
+                'Victoria',
+                'Zira',
+                'Microsoft Zira Desktop',
+                'Microsoft Hazel Desktop'
+            ];
+            
+            for (const name of femaleVoiceNames) {
+                const voice = voices.find(v => v.name.includes(name) || v.name === name);
+                if (voice) { femaleVoice = voice; break; }
+            }
+            
+            if (!femaleVoice) {
+                for (const voice of voices) {
+                    if (voice.name.toLowerCase().includes('female') || 
+                        voice.name.toLowerCase().includes('girl') ||
+                        voice.name.toLowerCase().includes('woman') ||
+                        voice.name.toLowerCase().includes('samantha') ||
+                        voice.name.toLowerCase().includes('zira') ||
+                        voice.name.toLowerCase().includes('victoria')) {
+                        femaleVoice = voice;
+                        break;
+                    }
+                }
+            }
+            
+            if (!femaleVoice && voices.length > 0) {
+                femaleVoice = voices[0];
+            }
+            
+            if (femaleVoice) {
+                utterance.voice = femaleVoice;
+            }
+            
+            utterance.rate = 0.85;
+            utterance.pitch = 1.1;
+            utterance.volume = 1;
+            utterance.lang = 'en-US';
+            
+            window.speechSynthesis.speak(utterance);
+        }
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.getVoices();
+            window.speechSynthesis.onvoiceschanged = function() {
+                window.speechSynthesis.getVoices();
+            };
+        }
+        
+        // ===== PWA SERVICE WORKER =====
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js')
+                .then(function(registration) {
+                    console.log('Service Worker registered!');
+                })
+                .catch(function(error) {
+                    console.log('Service Worker registration failed:', error);
+                });
+        }
+        
+        // ===== INIT MAP =====
+        document.addEventListener('DOMContentLoaded', function() {
+            if (weatherData.lat && weatherData.lon) {
+                initSatelliteMap(
+                    weatherData.lat, weatherData.lon,
+                    weatherData.city, weatherData.country,
+                    weatherData.description,
+                    weatherData.temperature,
+                    weatherData.unit
+                );
+            }
+        });
+        
+        // ===== SHOW CARTOON POPUP ON WEATHER LOAD =====
+        {% if weather %}
+            showCartoonPopup('{{ weather.description }}');
+        {% endif %}
+        
+        // ===== AUTO SUBMIT =====
+        document.getElementById('cityInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') document.getElementById('searchForm').submit();
+        });
+    </script>
+
+</body>
+</html>

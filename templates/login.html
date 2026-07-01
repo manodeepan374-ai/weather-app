@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Login - Weather App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .login-container {
+            max-width: 420px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            padding: 45px 35px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: slideUp 0.6s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+        .login-header .logo { font-size: 3.5rem; margin-bottom: 10px; }
+        .login-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1a1a2e 0%, #4a1942 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+        }
+        .login-header p {
+            color: #718096;
+            font-size: 0.95rem;
+            margin-top: 5px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+        .form-group .input-wrapper {
+            position: relative;
+        }
+        .form-group .input-wrapper i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            font-size: 1rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px 14px 44px;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            background: #f7fafc;
+            color: #2d3748;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            background: #ffffff;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .login-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+        }
+        .login-btn i { margin-right: 8px; }
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            font-size: 0.9rem;
+            text-align: center;
+            border: 1px solid #feb2b2;
+        }
+        .login-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #a0aec0;
+            font-size: 0.85rem;
+        }
+        .login-footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .login-footer a:hover { text-decoration: underline; }
+        .login-footer .demo-credentials {
+            margin-top: 10px;
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 10px;
+            border: 1px dashed #e2e8f0;
+            font-size: 0.8rem;
+        }
+        .login-footer .demo-credentials strong { color: #2d3748; }
+        .demo-credentials span { color: #667eea; font-weight: 600; }
+
+        /* ===== SOCIAL LOGIN ===== */
+        .social-login {
+            margin: 20px 0;
+        }
+        .social-login p {
+            text-align: center;
+            color: #a0aec0;
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+        .social-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .social-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            flex: 1;
+            justify-content: center;
+            min-width: 100px;
+            border: 2px solid;
+        }
+        .social-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .social-btn i { font-size: 1.2rem; }
+
+        .google-btn {
+            background: #ffffff;
+            color: #333333;
+            border-color: #ddd;
+        }
+        .google-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: #f7fafc;
+        }
+
+        .facebook-btn {
+            background: #1877f2;
+            color: white;
+            border-color: #1877f2;
+        }
+        .facebook-btn:hover {
+            background: #166fe5;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(24, 119, 242, 0.3);
+        }
+
+        .apple-btn {
+            background: #000000;
+            color: white;
+            border-color: #000000;
+        }
+        .apple-btn:hover {
+            background: #1a1a1a;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        /* ===== DARK MODE ===== */
+        body.dark-mode .login-container {
+            background: rgba(20, 20, 40, 0.95);
+            border-color: rgba(255, 255, 255, 0.06);
+        }
+        body.dark-mode .login-header h1 {
+            background: linear-gradient(135deg, #ffffff 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        body.dark-mode .login-header p {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        body.dark-mode .form-group label {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        body.dark-mode .form-group input {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+        body.dark-mode .form-group input:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(129, 140, 248, 0.4);
+        }
+        body.dark-mode .login-footer {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        body.dark-mode .login-footer a {
+            color: #a78bfa;
+        }
+        body.dark-mode .login-footer .demo-credentials {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.06);
+        }
+        body.dark-mode .login-footer .demo-credentials strong {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        body.dark-mode .demo-credentials span {
+            color: #a78bfa;
+        }
+        body.dark-mode .error-message {
+            background: rgba(254, 215, 215, 0.1);
+            color: #fca5a5;
+            border-color: rgba(254, 215, 215, 0.1);
+        }
+
+        /* Social Login Dark Mode */
+        body.dark-mode .google-btn {
+            background: #2d3748;
+            color: #e2e8f0;
+            border-color: #4a5568;
+        }
+        body.dark-mode .google-btn:hover {
+            background: #4a5568;
+            border-color: #818cf8;
+            color: #818cf8;
+        }
+        body.dark-mode .facebook-btn {
+            background: #1877f2;
+            border-color: #1877f2;
+        }
+        body.dark-mode .facebook-btn:hover {
+            background: #166fe5;
+        }
+        body.dark-mode .apple-btn {
+            background: #1a1a2e;
+            border-color: #2d3748;
+        }
+        body.dark-mode .apple-btn:hover {
+            background: #2d3748;
+        }
+        body.dark-mode .social-login p {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        @media (max-width: 480px) {
+            .login-container { padding: 30px 20px; }
+            .login-header h1 { font-size: 1.6rem; }
+            .social-btn { font-size: 0.8rem; padding: 10px 16px; min-width: 80px; }
+            .social-buttons { gap: 6px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="logo">🌤️</div>
+            <h1>Weather App</h1>
+            <p>Sign in to access your weather dashboard</p>
+        </div>
+
+        {% if error %}
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i> {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="username"><i class="fas fa-user"></i> Username</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" name="username" placeholder="Enter username" required autofocus>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password"><i class="fas fa-lock"></i> Password</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" name="password" placeholder="Enter password" required>
+                </div>
+            </div>
+
+            <button type="submit" class="login-btn">
+                <i class="fas fa-sign-in-alt"></i> Sign In
+            </button>
+        </form>
+
+        <!-- ===== SOCIAL LOGIN ===== -->
+        <div class="social-login">
+            <p>Or continue with</p>
+            <div class="social-buttons">
+                <a href="{{ url_for('google_login') }}" class="social-btn google-btn">
+                    <i class="fab fa-google"></i> Google
+                </a>
+                <a href="{{ url_for('facebook_login') }}" class="social-btn facebook-btn">
+                    <i class="fab fa-facebook-f"></i> Facebook
+                </a>
+                <a href="{{ url_for('apple_login') }}" class="social-btn apple-btn">
+                    <i class="fab fa-apple"></i> Apple
+                </a>
+            </div>
+        </div>
+
+        <div class="login-footer">
+            <a href="{{ url_for('forgot_password') }}" style="display: block; margin-bottom: 8px;">
+                <i class="fas fa-key"></i> Forgot Password?
+            </a>
+            <a href="{{ url_for('contact') }}" style="display: block; margin-bottom: 15px;">
+                <i class="fas fa-headset"></i> Contact Us
+            </a>
+            
+            Don't have an account? <a href="{{ url_for('register') }}">Register here</a>
+            
+            <div class="demo-credentials">
+                <strong>Demo Credentials:</strong><br>
+                Username: <span>admin</span> | Password: <span>admin123</span><br>
+                Username: <span>user</span> | Password: <span>user123</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        const isDarkMode = localStorage.getItem('darkMode') === 'true';
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+</body>
+</html>

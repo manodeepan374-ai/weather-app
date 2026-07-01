@@ -1,0 +1,5 @@
+Flask
+requests
+reportlab
+openai
+python-dotenv

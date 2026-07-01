@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Login - Weather App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .social-container {
+            max-width: 420px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            padding: 45px 35px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: slideUp 0.6s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .social-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+        .social-header .logo { font-size: 3.5rem; margin-bottom: 10px; }
+        .social-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1a1a2e 0%, #4a1942 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+        }
+        .social-header p {
+            color: #718096;
+            font-size: 0.95rem;
+            margin-top: 5px;
+        }
+        .social-header .provider-icon {
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 15px;
+        }
+        .google-icon { color: #ea4335; }
+        .facebook-icon { color: #1877f2; }
+        .apple-icon { color: #000000; }
+        .info-box {
+            background: #ebf8ff;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            color: #2b6cb0;
+            font-size: 0.9rem;
+            text-align: center;
+            border: 1px solid #bee3f8;
+        }
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+        }
+        .btn i { margin-right: 8px; }
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #a0aec0;
+            font-size: 0.85rem;
+        }
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-link a:hover { text-decoration: underline; }
+        body.dark-mode .social-container {
+            background: rgba(20, 20, 40, 0.95);
+            border-color: rgba(255, 255, 255, 0.06);
+        }
+        body.dark-mode .social-header h1 {
+            background: linear-gradient(135deg, #ffffff 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        body.dark-mode .social-header p {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        body.dark-mode .info-box {
+            background: rgba(235, 248, 255, 0.05);
+            color: #63b3ed;
+            border-color: rgba(190, 227, 248, 0.1);
+        }
+        body.dark-mode .apple-icon { color: #ffffff; }
+        @media (max-width: 480px) {
+            .social-container { padding: 30px 20px; }
+            .social-header h1 { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="social-container">
+        <div class="social-header">
+            <div class="logo">🌤️</div>
+            <span class="provider-icon 
+                {% if provider == 'Google' %}google-icon
+                {% elif provider == 'Facebook' %}facebook-icon
+                {% else %}apple-icon{% endif %}">
+                <i class="fab fa-{{ provider.lower() }}"></i>
+            </span>
+            <h1>{{ provider_name }} Login</h1>
+            <p>Continue with your {{ provider_name }} account</p>
+        </div>
+
+        <div class="info-box">
+            <i class="fas fa-info-circle"></i> 
+            This is a demo login page. In production, this would redirect to the actual {{ provider_name }} OAuth login screen.
+        </div>
+
+        <a href="{{ url_for('home') }}" class="btn">
+            <i class="fas fa-check-circle"></i> Continue with {{ provider_name }}
+        </a>
+
+        <div class="back-link">
+            <a href="{{ url_for('login') }}">← Back to Login</a>
+        </div>
+    </div>
+
+    <script>
+        const isDarkMode = localStorage.getItem('darkMode') === 'true';
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+</body>
+</html>

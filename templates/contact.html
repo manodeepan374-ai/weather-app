@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📞 Contact Us - Weather App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .contact-container {
+            max-width: 500px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            padding: 45px 35px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: slideUp 0.6s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .contact-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .contact-header .logo { font-size: 3.5rem; margin-bottom: 10px; }
+        .contact-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1a1a2e 0%, #4a1942 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+        }
+        .contact-header p {
+            color: #718096;
+            font-size: 0.95rem;
+            margin-top: 5px;
+        }
+        .contact-info {
+            display: grid;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .contact-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            background: rgba(247, 250, 252, 0.8);
+            border-radius: 14px;
+            border: 1px solid #edf2f7;
+            transition: all 0.3s ease;
+        }
+        .contact-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+        .contact-card .icon {
+            font-size: 2rem;
+            width: 50px;
+            text-align: center;
+            color: #667eea;
+        }
+        .contact-card .details h4 {
+            color: #2d3748;
+            margin: 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .contact-card .details p {
+            color: #718096;
+            margin: 2px 0 0;
+            font-size: 0.85rem;
+        }
+        .contact-card .details a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .contact-card .details a:hover { text-decoration: underline; }
+        .back-btn {
+            display: inline-block;
+            padding: 14px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            margin-top: 10px;
+        }
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+        }
+        body.dark-mode .contact-container {
+            background: rgba(20, 20, 40, 0.95);
+            border-color: rgba(255, 255, 255, 0.06);
+        }
+        body.dark-mode .contact-header h1 {
+            background: linear-gradient(135deg, #ffffff 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        body.dark-mode .contact-header p {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        body.dark-mode .contact-card {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.06);
+        }
+        body.dark-mode .contact-card .details h4 {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        body.dark-mode .contact-card .details p {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        body.dark-mode .contact-card .details a {
+            color: #a78bfa;
+        }
+        @media (max-width: 480px) {
+            .contact-container { padding: 30px 20px; }
+            .contact-header h1 { font-size: 1.6rem; }
+            .contact-card { padding: 12px 15px; }
+            .contact-card .icon { font-size: 1.5rem; width: 40px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="contact-container">
+        <div class="contact-header">
+            <div class="logo">📞</div>
+            <h1>Contact Us</h1>
+            <p>{{ texts.contact_message }}</p>
+        </div>
+
+        <div class="contact-info">
+            <div class="contact-card">
+                <div class="icon">📧</div>
+                <div class="details">
+                    <h4>Email</h4>
+                    <p><a href="mailto:support@weatherapp.com">support@weatherapp.com</a></p>
+                </div>
+            </div>
+
+            <div class="contact-card">
+                <div class="icon">📱</div>
+                <div class="details">
+                    <h4>Phone</h4>
+                    <p><a href="tel:+919876543210">+91 98765 43210</a></p>
+                </div>
+            </div>
+
+            <div class="contact-card">
+                <div class="icon">💬</div>
+                <div class="details">
+                    <h4>WhatsApp</h4>
+                    <p><a href="https://wa.me/919876543210">Chat on WhatsApp</a></p>
+                </div>
+            </div>
+
+            <div class="contact-card">
+                <div class="icon">🐦</div>
+                <div class="details">
+                    <h4>Twitter / X</h4>
+                    <p><a href="https://twitter.com/weatherapp">@weatherapp</a></p>
+                </div>
+            </div>
+
+            <div class="contact-card">
+                <div class="icon">📷</div>
+                <div class="details">
+                    <h4>Instagram</h4>
+                    <p><a href="https://instagram.com/weatherapp">@weatherapp</a></p>
+                </div>
+            </div>
+
+            <div class="contact-card">
+                <div class="icon">🌐</div>
+                <div class="details">
+                    <h4>Website</h4>
+                    <p><a href="https://weatherapp.com">www.weatherapp.com</a></p>
+                </div>
+            </div>
+        </div>
+
+        <a href="{{ url_for('login') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Back to Login
+        </a>
+    </div>
+
+    <script>
+        const isDarkMode = localStorage.getItem('darkMode') === 'true';
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+</body>
+</html>

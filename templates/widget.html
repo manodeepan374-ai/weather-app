@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📱 Weather Widget</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="{{ themes[theme]['class'] if theme else 'theme-default' }}">
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <div class="logo-section">
+                    <h1>📱 Weather Widget</h1>
+                    <a href="/" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Weather</a>
+                </div>
+                <div class="header-actions">
+                    <a href="/profile" class="icon-btn" title="My Profile">
+                        <i class="fas fa-user"></i>
+                    </a>
+                    <a href="/logout" class="icon-btn" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                    <button id="darkModeToggle" class="icon-btn"><i class="fas fa-moon"></i></button>
+                </div>
+            </div>
+        </header>
+
+        <div class="widget-section">
+            <div class="widget-intro">
+                <h2><i class="fas fa-code"></i> Generate Your Weather Widget</h2>
+                <p>Create an embeddable weather widget for your website or blog. Just enter a city and get the embed code!</p>
+            </div>
+
+            <div class="widget-form">
+                <form method="GET" action="/widget" class="widget-form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-city"></i> City Name</label>
+                        <input type="text" name="city" value="{{ request.args.city if request.args else '' }}" placeholder="e.g., London" required>
+                    </div>
+                    <button type="submit" class="generate-btn"><i class="fas fa-wand-magic-sparkles"></i> Generate Widget</button>
+                </form>
+            </div>
+
+            {% if widget_url %}
+            <div class="widget-result">
+                <h3><i class="fas fa-check-circle" style="color: #48bb78;"></i> Widget Generated!</h3>
+                
+                <div class="widget-preview">
+                    <h4>Preview</h4>
+                    <iframe src="{{ widget_url }}" width="100%" height="300" frameborder="0" style="border-radius: 16px; border: 1px solid #e2e8f0;"></iframe>
+                </div>
+
+                <div class="widget-code">
+                    <h4><i class="fas fa-code"></i> Embed Code</h4>
+                    <div class="code-container">
+                        <code id="embedCode">&lt;iframe src="{{ widget_url }}" width="100%" height="300" frameborder="0" style="border-radius:16px; border:1px solid #e2e8f0;"&gt;&lt;/iframe&gt;</code>
+                        <button onclick="copyCode()" class="copy-btn"><i class="fas fa-copy"></i> Copy</button>
+                    </div>
+                </div>
+
+                <div class="widget-instructions">
+                    <h4><i class="fas fa-lightbulb"></i> How to Use</h4>
+                    <ol>
+                        <li>Copy the embed code above</li>
+                        <li>Paste it into your HTML website</li>
+                        <li>The widget will display live weather for {{ request.args.city }}</li>
+                        <li>You can customize the width and height in the iframe</li>
+                    </ol>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="widget-features">
+                <h3><i class="fas fa-star"></i> Widget Features</h3>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">🌡️</span>
+                        <span class="feature-title">Live Temperature</span>
+                        <span class="feature-desc">Shows current temperature in real-time</span>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">☁️</span>
+                        <span class="feature-title">Weather Description</span>
+                        <span class="feature-desc">Displays weather condition with icon</span>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">💧</span>
+                        <span class="feature-title">Humidity Display</span>
+                        <span class="feature-desc">Shows humidity percentage</span>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🌬️</span>
+                        <span class="feature-title">Wind Speed</span>
+                        <span class="feature-desc">Displays wind speed in km/h</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <i class="fas fa-cloud-sun"></i> Weather data from <a href="https://openweathermap.org" target="_blank">OpenWeatherMap</a>
+        </footer>
+    </div>
+
+    <style>
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 30px;
+            background: rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateX(-3px);
+        }
+
+        .widget-section {
+            margin-top: 20px;
+        }
+
+        .widget-intro {
+            text-align: center;
+            padding: 25px 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 25px;
+        }
+
+        .widget-intro h2 {
+            font-size: 1.6rem;
+            color: #1a202c;
+        }
+
+        .widget-intro p {
+            color: #718096;
+            margin-top: 6px;
+        }
+
+        .widget-form {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 25px;
+        }
+
+        .widget-form-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .widget-form-row .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .widget-form-row .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 6px;
+        }
+
+        .widget-form-row .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .widget-form-row .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .generate-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            align-self: flex-end;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .widget-result {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 25px;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .widget-result h3 {
+            color: #2d3748;
+            margin-bottom: 16px;
+        }
+
+        .widget-preview {
+            margin-bottom: 20px;
+        }
+
+        .widget-preview h4 {
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .widget-code {
+            margin-bottom: 20px;
+        }
+
+        .widget-code h4 {
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .code-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #1a202c;
+            border-radius: 12px;
+            padding: 12px 16px;
+            overflow: hidden;
+        }
+
+        .code-container code {
+            flex: 1;
+            color: #a0aec0;
+            font-size: 0.8rem;
+            overflow-x: auto;
+            white-space: nowrap;
+            font-family: 'Courier New', monospace;
+        }
+
+        .copy-btn {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .copy-btn:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        .widget-instructions h4 {
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .widget-instructions ol {
+            color: #718096;
+            padding-left: 20px;
+            line-height: 1.8;
+        }
+
+        .widget-features {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .widget-features h3 {
+            color: #2d3748;
+            margin-bottom: 16px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+        }
+
+        .feature-icon {
+            display: block;
+            font-size: 2rem;
+            margin-bottom: 6px;
+        }
+
+        .feature-title {
+            display: block;
+            font-weight: 700;
+            color: #1a202c;
+            font-size: 0.95rem;
+        }
+
+        .feature-desc {
+            display: block;
+            color: #a0aec0;
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+
+        body.dark-mode .widget-intro,
+        body.dark-mode .widget-form,
+        body.dark-mode .widget-result,
+        body.dark-mode .widget-features {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        body.dark-mode .widget-intro h2,
+        body.dark-mode .widget-result h3,
+        body.dark-mode .widget-features h3,
+        body.dark-mode .widget-preview h4,
+        body.dark-mode .widget-code h4,
+        body.dark-mode .widget-instructions h4,
+        body.dark-mode .feature-title {
+            color: #ffffff !important;
+        }
+
+        body.dark-mode .widget-intro p,
+        body.dark-mode .feature-desc,
+        body.dark-mode .widget-instructions ol {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        body.dark-mode .widget-form-row .form-group label {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        body.dark-mode .widget-form-row .form-group input {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            color: #ffffff !important;
+        }
+
+        body.dark-mode .widget-form-row .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.3) !important;
+        }
+
+        body.dark-mode .feature-card {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-color: rgba(255, 255, 255, 0.06) !important;
+        }
+
+        body.dark-mode .code-container {
+            background: rgba(0, 0, 0, 0.4) !important;
+        }
+
+        @media (max-width: 768px) {
+            .widget-form-row {
+                flex-direction: column;
+            }
+            .generate-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .code-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .code-container code {
+                white-space: normal;
+                word-break: break-all;
+            }
+        }
+    </style>
+
+    <script>
+        function copyCode() {
+            const code = document.getElementById('embedCode');
+            const range = document.createRange();
+            range.selectNode(code);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand('copy');
+            window.getSelection().removeAllRanges();
+            
+            const btn = document.querySelector('.copy-btn');
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+            }, 2000);
+        }
+
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+        
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+            darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+        
+        darkModeToggle.addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+            this.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        });
+    </script>
+</body>
+</html>

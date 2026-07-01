@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚙️ Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="{{ themes[theme]['class'] if theme else 'theme-default' }}">
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <div class="logo-section">
+                    <h1>⚙️ Admin Dashboard</h1>
+                    <a href="/" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Weather</a>
+                </div>
+                <div class="header-actions">
+                    <a href="/profile" class="icon-btn" title="My Profile">
+                        <i class="fas fa-user"></i>
+                    </a>
+                    <a href="/logout" class="icon-btn" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                    <button id="darkModeToggle" class="icon-btn"><i class="fas fa-moon"></i></button>
+                </div>
+            </div>
+        </header>
+
+        <div class="admin-section">
+            <!-- Stats Cards -->
+            <div class="admin-stats">
+                <div class="stat-card-admin">
+                    <div class="stat-icon-admin" style="background: rgba(102, 126, 234, 0.15); color: #667eea;">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info-admin">
+                        <span class="stat-number-admin">{{ total_users }}</span>
+                        <span class="stat-label-admin">Total Users</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-admin">
+                    <div class="stat-icon-admin" style="background: rgba(72, 187, 120, 0.15); color: #48bb78;">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="stat-info-admin">
+                        <span class="stat-number-admin">{{ total_searches }}</span>
+                        <span class="stat-label-admin">Total Searches</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-admin">
+                    <div class="stat-icon-admin" style="background: rgba(237, 137, 54, 0.15); color: #ed8936;">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="stat-info-admin">
+                        <span class="stat-number-admin">{{ total_alerts }}</span>
+                        <span class="stat-label-admin">Active Alerts</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-admin">
+                    <div class="stat-icon-admin" style="background: rgba(229, 62, 62, 0.15); color: #e53e3e;">
+                        <i class="fas fa-city"></i>
+                    </div>
+                    <div class="stat-info-admin">
+                        <span class="stat-number-admin">{{ popular_cities|length }}</span>
+                        <span class="stat-label-admin">Top Cities</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Popular Cities -->
+            <div class="admin-card">
+                <h3><i class="fas fa-fire"></i> Popular Cities</h3>
+                <div class="popular-cities-list">
+                    {% for city in popular_cities %}
+                    <div class="city-rank-item">
+                        <span class="city-rank">#{{ loop.index }}</span>
+                        <span class="city-name">{{ city.city }}</span>
+                        <span class="city-count">{{ city.count }} searches</span>
+                        <div class="city-bar">
+                            <div class="city-bar-fill" style="width: {{ (city.count / popular_cities[0].count * 100) if popular_cities else 0 }}%;"></div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="empty-text">No cities searched yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- User Activity -->
+            <div class="admin-card">
+                <h3><i class="fas fa-user-clock"></i> Top Users by Activity</h3>
+                <div class="user-activity-list">
+                    <div class="activity-header">
+                        <span>User</span>
+                        <span>Searches</span>
+                    </div>
+                    {% for user in user_activity %}
+                    <div class="activity-item">
+                        <span class="activity-username">{{ user.username }}</span>
+                        <span class="activity-count">{{ user.search_count }}</span>
+                    </div>
+                    {% else %}
+                    <p class="empty-text">No user activity yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="admin-card">
+                <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                <div class="quick-actions">
+                    <a href="/compare" class="quick-action-btn">
+                        <i class="fas fa-arrows-left-right"></i> Compare Cities
+                    </a>
+                    <a href="/chatbot" class="quick-action-btn">
+                        <i class="fas fa-robot"></i> Chatbot
+                    </a>
+                    <a href="/widget" class="quick-action-btn">
+                        <i class="fas fa-code"></i> Widget Generator
+                    </a>
+                    <a href="/profile" class="quick-action-btn">
+                        <i class="fas fa-user-cog"></i> Manage Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <i class="fas fa-cloud-sun"></i> Weather data from <a href="https://openweathermap.org" target="_blank">OpenWeatherMap</a>
+        </footer>
+    </div>
+
+    <style>
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 30px;
+            background: rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateX(-3px);
+        }
+
+        .admin-section {
+            margin-top: 20px;
+        }
+
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card-admin {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card-admin:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.04);
+        }
+
+        .stat-icon-admin {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .stat-info-admin {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-number-admin {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #1a202c;
+        }
+
+        .stat-label-admin {
+            font-size: 0.8rem;
+            color: #a0aec0;
+        }
+
+        .admin-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 25px;
+        }
+
+        .admin-card h3 {
+            color: #2d3748;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .popular-cities-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .city-rank-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: #f7fafc;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .city-rank-item:hover {
+            background: #edf2f7;
+        }
+
+        .city-rank {
+            font-weight: 800;
+            color: #667eea;
+            font-size: 0.9rem;
+            min-width: 30px;
+        }
+
+        .city-name {
+            font-weight: 600;
+            color: #2d3748;
+            flex: 1;
+        }
+
+        .city-count {
+            font-size: 0.8rem;
+            color: #a0aec0;
+            margin-right: 10px;
+        }
+
+        .city-bar {
+            flex: 1;
+            height: 6px;
+            background: #edf2f7;
+            border-radius: 10px;
+            overflow: hidden;
+            min-width: 100px;
+        }
+
+        .city-bar-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+            transition: width 0.6s ease;
+        }
+
+        .user-activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .activity-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 14px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: #f7fafc;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .activity-item:hover {
+            background: #edf2f7;
+        }
+
+        .activity-username {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .activity-count {
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .quick-action-btn {
+            padding: 12px 16px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .quick-action-btn:hover {
+            background: #edf2f7;
+            border-color: #667eea;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .empty-text {
+            color: #a0aec0;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Dark Mode */
+        body.dark-mode .stat-card-admin,
+        body.dark-mode .admin-card {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        body.dark-mode .stat-number-admin {
+            color: #ffffff !important;
+        }
+
+        body.dark-mode .admin-card h3 {
+            color: #ffffff !important;
+        }
+
+        body.dark-mode .city-rank-item,
+        body.dark-mode .activity-item {
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        body.dark-mode .city-rank-item:hover,
+        body.dark-mode .activity-item:hover {
+            background: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        body.dark-mode .city-name,
+        body.dark-mode .activity-username {
+            color: #ffffff !important;
+        }
+
+        body.dark-mode .activity-header {
+            color: rgba(255, 255, 255, 0.4) !important;
+            border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+        }
+
+        body.dark-mode .quick-action-btn {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        body.dark-mode .quick-action-btn:hover {
+            background: rgba(255, 255, 255, 0.08) !important;
+            border-color: #a78bfa !important;
+            color: #a78bfa !important;
+        }
+
+        body.dark-mode .city-bar {
+            background: rgba(255, 255, 255, 0.06) !important;
+        }
+
+        @media (max-width: 768px) {
+            .admin-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .city-bar {
+                min-width: 50px;
+            }
+
+            .city-rank-item {
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .admin-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <script>
+        // Dark Mode Toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+        
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+            darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+        
+        darkModeToggle.addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+            this.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        });
+    </script>
+</body>
+</html>

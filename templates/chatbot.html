@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 Weather Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="{{ themes[theme]['class'] if theme else 'theme-default' }}">
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <div class="logo-section">
+                    <h1>🤖 Weather Chatbot</h1>
+                    <a href="/" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Weather</a>
+                </div>
+                <div class="header-actions">
+                    <a href="/profile" class="icon-btn" title="My Profile">
+                        <i class="fas fa-user"></i>
+                    </a>
+                    <a href="/logout" class="icon-btn" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                    <button id="darkModeToggle" class="icon-btn"><i class="fas fa-moon"></i></button>
+                </div>
+            </div>
+        </header>
+
+        <div class="chatbot-section">
+            <div class="chatbot-intro">
+                <div class="chatbot-avatar">🤖</div>
+                <h2>Hi, I'm your Weather Assistant!</h2>
+                <p>Ask me anything about the weather. I can tell you about temperature, rain, humidity, wind, and more!</p>
+            </div>
+
+            <div class="chatbot-form">
+                <form method="POST" class="chatbot-form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-city"></i> City (Optional)</label>
+                        <input type="text" name="city" value="{{ request.form.city if request.form else '' }}" placeholder="e.g., London" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-comment"></i> Your Question</label>
+                        <input type="text" name="query" value="{{ user_query }}" placeholder="e.g., What's the temperature?" required class="form-input">
+                    </div>
+                    <button type="submit" class="chatbot-send-btn"><i class="fas fa-paper-plane"></i> Ask</button>
+                </form>
+            </div>
+
+            {% if response %}
+            <div class="chatbot-response">
+                <div class="response-header">
+                    <span class="response-icon">🤖</span>
+                    <span class="response-label">Weather Assistant</span>
+                </div>
+                <div class="response-content">
+                    {{ response }}
+                </div>
+                {% if request.form.city %}
+                <div class="response-city">
+                    <i class="fas fa-map-pin"></i> About: {{ request.form.city }}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="chatbot-tips">
+                <h4><i class="fas fa-lightbulb"></i> Try These Questions</h4>
+                <div class="tips-grid">
+                    <div class="tip-item" onclick="document.querySelector('input[name=query]').value='What is the temperature?'; document.querySelector('form').submit();">
+                        🌡️ "What's the temperature?"
+                    </div>
+                    <div class="tip-item" onclick="document.querySelector('input[name=query]').value='Is it going to rain?'; document.querySelector('form').submit();">
+                        🌧️ "Is it going to rain?"
+                    </div>
+                    <div class="tip-item" onclick="document.querySelector('input[name=query]').value='What should I wear today?'; document.querySelector('form').submit();">
+                        👕 "What should I wear today?"
+                    </div>
+                    <div class="tip-item" onclick="document.querySelector('input[name=query]').value='How humid is it?'; document.querySelector('form').submit();">
+                        💧 "How humid is it?"
+                    </div>
+                    <div class="tip-item" onclick="document.querySelector('input[name=query]').value='Should I carry an umbrella?'; document.querySelector('form').submit();">
+                        ☂️ "Should I carry an umbrella?"
+                    </div>
+                    <div class="tip-item" onclick="document.querySelector('input[name=query]').value='Tell me about the wind'; document.querySelector('form').submit();">
+                        🌬️ "Tell me about the wind"
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <i class="fas fa-cloud-sun"></i> Weather data from <a href="https://openweathermap.org" target="_blank">OpenWeatherMap</a>
+        </footer>
+    </div>
+
+    <style>
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 30px;
+            background: rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateX(-3px);
+        }
+
+        .chatbot-section {
+            margin-top: 20px;
+        }
+
+        .chatbot-intro {
+            text-align: center;
+            padding: 30px 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 25px;
+        }
+
+        .chatbot-avatar {
+            font-size: 4rem;
+            margin-bottom: 10px;
+        }
+
+        .chatbot-intro h2 {
+            font-size: 1.8rem;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .chatbot-intro p {
+            color: #718096;
+            font-size: 1rem;
+        }
+
+        .chatbot-form {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 25px;
+        }
+
+        .chatbot-form-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .chatbot-form-row .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .chatbot-form-row .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .chatbot-send-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            align-self: flex-end;
+        }
+
+        .chatbot-send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .chatbot-response {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 25px;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .response-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .response-icon {
+            font-size: 1.8rem;
+        }
+
+        .response-label {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1a202c;
+        }
+
+        .response-content {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: #2d3748;
+            padding: 12px 16px;
+            background: #f7fafc;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .response-city {
+            margin-top: 12px;
+            color: #a0aec0;
+            font-size: 0.85rem;
+        }
+
+        .response-city i {
+            margin-right: 6px;
+        }
+
+        .chatbot-tips {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .chatbot-tips h4 {
+            color: #2d3748;
+            margin-bottom: 12px;
+        }
+
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .tip-item {
+            padding: 12px 16px;
+            background: #f7fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            color: #4a5568;
+            text-align: center;
+        }
+
+        .tip-item:hover {
+            background: #edf2f7;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        body.dark-mode .chatbot-intro,
+        body.dark-mode .chatbot-form,
+        body.dark-mode .chatbot-response,
+        body.dark-mode .chatbot-tips {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        body.dark-mode .chatbot-intro h2,
+        body.dark-mode .response-label,
+        body.dark-mode .chatbot-tips h4 {
+            color: #ffffff !important;
+        }
+
+        body.dark-mode .chatbot-intro p {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        body.dark-mode .response-content {
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+
+        body.dark-mode .form-input {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            color: #ffffff !important;
+        }
+
+        body.dark-mode .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.3) !important;
+        }
+
+        body.dark-mode .chatbot-form-row .form-group label {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        body.dark-mode .tip-item {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        body.dark-mode .tip-item:hover {
+            background: rgba(255, 255, 255, 0.08) !important;
+            border-color: #a78bfa !important;
+        }
+
+        @media (max-width: 768px) {
+            .chatbot-form-row {
+                flex-direction: column;
+            }
+            .chatbot-send-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .tips-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .tips-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <script>
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+        
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+            darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+        
+        darkModeToggle.addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+            this.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        });
+    </script>
+</body>
+</html>
